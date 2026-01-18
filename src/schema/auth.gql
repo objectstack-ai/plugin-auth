@@ -25,7 +25,7 @@ type User @entity {
   createdAt: DateTime! @default(value: "now")
 
   """Timestamp when the user was last updated"""
-  updatedAt: DateTime! @default(value: "now") @updatedAt
+  updatedAt: DateTime! @updatedAt
 
   """Sessions associated with this user"""
   sessions: [Session!]! @relation(name: "UserSessions")
@@ -61,7 +61,7 @@ type Session @entity {
   createdAt: DateTime! @default(value: "now")
 
   """Timestamp when the session was last updated"""
-  updatedAt: DateTime! @default(value: "now") @updatedAt
+  updatedAt: DateTime! @updatedAt
 
   """The user who owns this session"""
   user: User! @relation(name: "UserSessions", references: [userId])
@@ -109,7 +109,7 @@ type Account @entity {
   createdAt: DateTime! @default(value: "now")
 
   """Timestamp when the account was last updated"""
-  updatedAt: DateTime! @default(value: "now") @updatedAt
+  updatedAt: DateTime! @updatedAt
 
   """The user who owns this account"""
   user: User! @relation(name: "UserAccounts", references: [userId])
