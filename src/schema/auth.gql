@@ -1,0 +1,143 @@
+# Authentication Schema for ObjectStack
+# Compatible with Better-Auth requirements
+
+"""
+User entity representing authenticated users in the system.
+Maps to Better-Auth's User table structure.
+"""
+type User @entity {
+  """Unique identifier for the user"""
+  id: ID! @primary
+
+  """User's email address"""
+  email: String! @unique
+
+  """Whether the user's email has been verified"""
+  emailVerified: Boolean! @default(value: false)
+
+  """User's display name"""
+  name: String
+
+  """URL to user's profile image"""
+  image: String
+
+  """Timestamp when the user was created"""
+  createdAt: DateTime! @default(value: "now")
+
+  """Timestamp when the user was last updated"""
+  updatedAt: DateTime! @default(value: "now") @updatedAt
+
+  """Sessions associated with this user"""
+  sessions: [Session!]! @relation(name: "UserSessions")
+
+  """Accounts associated with this user (OAuth providers)"""
+  accounts: [Account!]! @relation(name: "UserAccounts")
+}
+
+"""
+Session entity representing active user sessions.
+Maps to Better-Auth's Session table structure.
+"""
+type Session @entity {
+  """Unique identifier for the session"""
+  id: ID! @primary
+
+  """Reference to the user who owns this session"""
+  userId: String! @index
+
+  """When this session expires"""
+  expiresAt: DateTime!
+
+  """Session token for authentication"""
+  token: String! @unique
+
+  """IP address from which the session was created"""
+  ipAddress: String
+
+  """User agent string of the client"""
+  userAgent: String
+
+  """Timestamp when the session was created"""
+  createdAt: DateTime! @default(value: "now")
+
+  """Timestamp when the session was last updated"""
+  updatedAt: DateTime! @default(value: "now") @updatedAt
+
+  """The user who owns this session"""
+  user: User! @relation(name: "UserSessions", references: [userId])
+}
+
+"""
+Account entity for OAuth provider accounts linked to users.
+Maps to Better-Auth's Account table structure.
+"""
+type Account @entity {
+  """Unique identifier for the account"""
+  id: ID! @primary
+
+  """Reference to the user who owns this account"""
+  userId: String! @index
+
+  """OAuth provider name (e.g., 'google', 'github')"""
+  provider: String!
+
+  """Account ID from the OAuth provider"""
+  providerAccountId: String!
+
+  """OAuth access token"""
+  accessToken: String
+
+  """OAuth refresh token"""
+  refreshToken: String
+
+  """Access token expiration timestamp"""
+  accessTokenExpiresAt: DateTime
+
+  """Refresh token expiration timestamp"""
+  refreshTokenExpiresAt: DateTime
+
+  """OAuth scope granted"""
+  scope: String
+
+  """OAuth ID token"""
+  idToken: String
+
+  """OAuth token type"""
+  tokenType: String
+
+  """Timestamp when the account was created"""
+  createdAt: DateTime! @default(value: "now")
+
+  """Timestamp when the account was last updated"""
+  updatedAt: DateTime! @default(value: "now") @updatedAt
+
+  """The user who owns this account"""
+  user: User! @relation(name: "UserAccounts", references: [userId])
+
+  """Unique constraint on provider and providerAccountId"""
+  @@unique([provider, providerAccountId])
+}
+
+"""
+VerificationToken entity for email verification and password reset flows.
+Maps to Better-Auth's VerificationToken table structure.
+"""
+type VerificationToken @entity {
+  """Unique identifier for the verification token"""
+  id: ID! @primary
+
+  """Identifier (typically email or user ID)"""
+  identifier: String! @index
+
+  """The verification token value"""
+  token: String! @unique
+
+  """When this token expires"""
+  expiresAt: DateTime!
+
+  """Timestamp when the token was created"""
+  createdAt: DateTime! @default(value: "now")
+
+  """Unique constraint on identifier and token"""
+  @@unique([identifier, token])
+}

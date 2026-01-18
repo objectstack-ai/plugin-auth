@@ -1,0 +1,57 @@
+{
+  "name": "@objectstack/plugin-auth",
+  "version": "0.1.0",
+  "description": "Authentication and identity layer for ObjectStack, wrapping Better-Auth with ObjectQL storage adapter",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./client": {
+      "import": "./dist/client/index.js",
+      "types": "./dist/client/index.d.ts"
+    },
+    "./server": {
+      "import": "./dist/server/index.js",
+      "types": "./dist/server/index.d.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "clean": "rm -rf dist"
+  },
+  "keywords": [
+    "objectstack",
+    "authentication",
+    "auth",
+    "better-auth",
+    "objectql",
+    "plugin"
+  ],
+  "author": "ObjectStack",
+  "license": "MIT",
+  "peerDependencies": {
+    "@objectstack/protocol": "*",
+    "@objectstack/ql": "*",
+    "react": "^18.0.0"
+  },
+  "dependencies": {
+    "better-auth": "^1.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/react": "^18.0.0",
+    "typescript": "^5.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
