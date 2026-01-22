@@ -43,7 +43,7 @@ export function SignInForm({ authClient, onSuccess, onError }: SignInFormProps) 
           id="email"
           type="email"
           value={email}
-          onChange={(e) => setEmail((e.target as HTMLInputElement).value)}
+          onChange={(e) => setEmail(e.currentTarget.value)}
           required
           disabled={loading}
           style={{
@@ -63,7 +63,7 @@ export function SignInForm({ authClient, onSuccess, onError }: SignInFormProps) 
           id="password"
           type="password"
           value={password}
-          onChange={(e) => setPassword((e.target as HTMLInputElement).value)}
+          onChange={(e) => setPassword(e.currentTarget.value)}
           required
           disabled={loading}
           style={{
