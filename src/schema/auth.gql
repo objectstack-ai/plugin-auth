@@ -1,0 +1,60 @@
+"""
+User entity for authentication
+Stores user account information
+"""
+type User {
+  id: ID!
+  name: String
+  email: String!
+  emailVerified: Boolean
+  image: String
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+"""
+Session entity for authentication
+Tracks active user sessions
+"""
+type Session {
+  id: ID!
+  userId: ID!
+  expiresAt: DateTime!
+  token: String!
+  ipAddress: String
+  userAgent: String
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+"""
+Account entity for OAuth/social login
+Links users to external authentication providers
+"""
+type Account {
+  id: ID!
+  userId: ID!
+  accountId: String!
+  providerId: String!
+  accessToken: String
+  refreshToken: String
+  idToken: String
+  accessTokenExpiresAt: DateTime
+  refreshTokenExpiresAt: DateTime
+  scope: String
+  password: String
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+"""
+Verification token for email verification and password reset
+"""
+type VerificationToken {
+  id: ID!
+  identifier: String!
+  value: String!
+  expiresAt: DateTime!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
