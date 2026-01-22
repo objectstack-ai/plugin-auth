@@ -103,42 +103,31 @@ export function initializeAuth(config: BetterAuthConfig) {
     
     // Plugins for additional functionality
     plugins: [
-      // RBAC Bridge Plugin
-      // Injects ObjectOS permissions into the session
-      {
-        id: 'objectos-rbac-bridge',
-        hooks: {
-          after: [
-            {
-              matcher(context) {
-                return context.path === '/api/auth/session';
-              },
-              async handler(ctx) {
-                const session = ctx.context.session;
-                
-                // If ObjectOS is configured and we have a session
-                if (os && session && session.user) {
-                  try {
-                    // Fetch permissions from ObjectOS
-                    const permissions = await os.getPermissions(session.user.id);
-                    
-                    // Inject permissions into the session
-                    session.user.permissions = permissions;
-                  } catch (error) {
-                    console.error('Failed to fetch permissions:', error);
-                    // Don't fail the session if permissions fetch fails
-                    session.user.permissions = [];
-                  }
-                }
-                
-                return ctx;
-              },
-            },
-          ],
-        },
-      },
+      // RBAC Bridge Plugin - Simplified version
+      // Note: The actual RBAC bridge implementation would be added
+      // after Better-Auth session handling based on the Better-Auth API
     ],
   });
+
+  // Return auth instance with permission injector if ObjectOS is available
+  if (os) {
+    return {
+      ...auth,
+      async getSessionWithPermissions(sessionToken: string) {
+        const session = await auth.api.getSession({ headers: { cookie: sessionToken } });
+        if (session && session.user) {
+          try {
+            const permissions = await os.getPermissions(session.user.id);
+            (session.user as any).permissions = permissions;
+          } catch (error) {
+            console.error('Failed to fetch permissions:', error);
+            (session.user as any).permissions = [];
+          }
+        }
+        return session;
+      },
+    };
+  }
 
   return auth;
 }
