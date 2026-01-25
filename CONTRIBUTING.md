@@ -12,17 +12,17 @@ Thank you for your interest in contributing to the ObjectStack Auth Plugin! This
 
 2. **Install dependencies**
    ```bash
-   npm install
+   pnpm install
    ```
 
 3. **Build the project**
    ```bash
-   npm run build
+   pnpm run build
    ```
 
 4. **Watch mode for development**
    ```bash
-   npm run dev
+   pnpm run dev
    ```
 
 ## Project Structure
@@ -109,8 +109,8 @@ When adding tests (future work):
 
 3. **Verify your changes**
    ```bash
-   npm run typecheck
-   npm run build
+   pnpm run typecheck
+   pnpm run build
    ```
 
 4. **Commit with clear messages**
@@ -161,7 +161,7 @@ This repository includes several GitHub Actions workflows to ensure code quality
 ### Dependabot
 - **Schedule**: Weekly (Mondays)
 - **Updates**:
-  - npm dependencies
+  - pnpm dependencies
   - GitHub Actions versions
 - **Configuration**: `.github/dependabot.yml`
 

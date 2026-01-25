@@ -13,7 +13,7 @@
 ## Installation
 
 ```bash
-npm install @objectstack/plugin-auth better-auth
+pnpm add @objectstack/plugin-auth better-auth
 ```
 
 ## Quick Start
