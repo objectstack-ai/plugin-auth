@@ -180,6 +180,7 @@ export function createObjectQLAdapter(config: ObjectQLAdapterConfig): Adapter {
     async createVerificationToken(data: AdapterVerificationToken): Promise<AdapterVerificationToken> {
       const token = await ql.entity('VerificationToken').create({
         data: {
+          id: data.id || crypto.randomUUID?.() || `${Date.now()}-${Math.random()}`,
           identifier: data.identifier,
           token: data.token,
           expiresAt: data.expiresAt,
