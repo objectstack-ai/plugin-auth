@@ -1,11 +1,13 @@
 import { betterAuth } from 'better-auth';
 import type { BetterAuthOptions } from 'better-auth';
-import type { ObjectQLClient } from '@objectstack/ql';
 import { createObjectQLAdapter } from '../adapter/index.js';
 
 /**
  * ObjectOS Permissions type
  * Can be customized based on your RBAC implementation
+ * 
+ * Note: The peer dependency @objectstack/ql provides the ObjectQLClient type.
+ * This file uses 'any' type to avoid type errors when the peer dependency is not installed.
  */
 export type ObjectOSPermissions = string[] | Record<string, boolean> | null;
 
@@ -13,7 +15,7 @@ export type ObjectOSPermissions = string[] | Record<string, boolean> | null;
  * Server-side configuration for ObjectStack Auth Plugin
  */
 export interface ObjectStackAuthServerConfig {
-  ql: ObjectQLClient;
+  ql: any; // ObjectQLClient from @objectstack/ql peer dependency
   secret?: string;
   baseURL?: string;
   trustedOrigins?: string[];
@@ -78,15 +80,12 @@ export function createAuthServer(config: ObjectStackAuthServerConfig) {
 
   // Add email provider if configured
   if (emailProvider) {
-    authOptions.emailAndPassword = {
-      enabled: true,
-      ...emailProvider,
-    };
+    authOptions.emailAndPassword = emailProvider;
   }
 
   // Add social providers if configured
-  if (socialProviders.length > 0) {
-    authOptions.socialProviders = socialProviders;
+  if (socialProviders && Object.keys(socialProviders).length > 0) {
+    authOptions.socialProviders = socialProviders as BetterAuthOptions['socialProviders'];
   }
 
   // Create Better-Auth instance
@@ -100,7 +99,10 @@ export function createAuthServer(config: ObjectStackAuthServerConfig) {
     
     // Enhanced getSession that includes permissions
     getSessionWithPermissions: async (request: Request) => {
-      const session = await auth.api.getSession({ request });
+      const session = await auth.api.getSession({ 
+        request,
+        headers: request.headers 
+      });
       
       if (session?.user?.id && onGetPermissions) {
         try {
@@ -167,5 +169,8 @@ export async function getSession(
   }
   
   // Fallback to standard getSession
-  return await auth.api.getSession({ request }) as ObjectStackSession | null;
+  return await auth.api.getSession({ 
+    request,
+    headers: request.headers 
+  }) as ObjectStackSession | null;
 }

@@ -59,8 +59,25 @@ export const {
 
 /**
  * Type-safe session from client
+ * Extended to include permissions from ObjectOS RBAC
  */
-export type ObjectStackClientSession = InferSessionFromClient<typeof authClient>;
+export type ObjectStackClientSession = {
+  user?: {
+    id: string;
+    email: string;
+    name?: string;
+    image?: string;
+    emailVerified: boolean;
+    permissions?: string[] | Record<string, boolean> | null;
+  };
+  session?: {
+    id: string;
+    expiresAt: Date;
+    token: string;
+    ipAddress?: string;
+    userAgent?: string;
+  };
+} | null;
 
 /**
  * Convenience hook to access user permissions
@@ -68,8 +85,13 @@ export type ObjectStackClientSession = InferSessionFromClient<typeof authClient>
 export function usePermissions() {
   const { data: session, isPending } = useSession();
   
+  // Safely extract permissions, defaulting to undefined if not present
+  const permissions = session?.user && 'permissions' in session.user 
+    ? (session.user as any).permissions 
+    : undefined;
+  
   return {
-    permissions: session?.user?.permissions,
+    permissions,
     isPending,
     isAuthenticated: !!session,
   };

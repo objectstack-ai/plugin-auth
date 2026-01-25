@@ -1,5 +1,14 @@
-import type { ObjectStackPlugin, PluginContext } from '@objectstack/protocol';
 import { createAuthServer, type ObjectStackAuthServerConfig } from './server/index.js';
+
+/**
+ * Note: This file imports from @objectstack/protocol which is a peer dependency.
+ * When the peer dependency is not installed, TypeScript will show errors.
+ * These will be resolved when the package is used in a real project with all peer dependencies installed.
+ */
+
+// Use 'any' for peer dependency types when not available
+type ObjectStackPlugin = any;
+type PluginContext = any;
 
 /**
  * ObjectStack Authentication Plugin
@@ -37,8 +46,9 @@ export interface AuthPluginConfig {
 
   /**
    * Social providers (Google, GitHub, etc.)
+   * Pass as-is to Better-Auth
    */
-  socialProviders?: any[];
+  socialProviders?: any;
 
   /**
    * Callback to get user permissions from ObjectOS
@@ -89,8 +99,14 @@ export function createAuthPlugin(config: AuthPluginConfig = {}): ObjectStackPlug
         console.log('[Auth Plugin] Registering authentication routes...');
         
         // Better-Auth exposes a handler for all auth routes
-        context.app.all('/api/auth/*', async (req: any, res: any) => {
-          return authServer!.handler(req, res);
+        // The handler expects a Web Request object
+        context.app.all('/api/auth/*', async (req: any) => {
+          // Defensive check: ensure authServer is initialized
+          // This could happen if the handler is called before onEnable completes
+          if (!authServer) {
+            throw new Error('Auth server not initialized');
+          }
+          return authServer.handler(req);
         });
 
         console.log('[Auth Plugin] Authentication routes registered at /api/auth/*');
@@ -122,7 +138,7 @@ export function createAuthPlugin(config: AuthPluginConfig = {}): ObjectStackPlug
 }
 
 // Re-export key types and utilities
-export type { ObjectStackAuthServerConfig, ObjectOSPermissions } from './server/index.js';
+export type { ObjectStackAuthServerConfig } from './server/index.js';
 export type { ObjectStackSession } from './server/index.js';
 export { createAuthServer, getSession } from './server/index.js';
 
@@ -159,9 +175,9 @@ export type {
   PasswordResetConfirm,
   EmailVerification,
   AuthErrorCode,
-  ObjectOSPermissions,
 } from './types.js';
 export { AuthError } from './types.js';
+export type { ObjectOSPermissions } from './server/index.js';
 
 // Default export
 export default createAuthPlugin;

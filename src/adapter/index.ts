@@ -1,5 +1,4 @@
-import type { Adapter, AdapterAccount, AdapterSession, AdapterUser, AdapterVerificationToken } from 'better-auth';
-import type { ObjectQLClient } from '@objectstack/ql';
+import type { BetterAuthOptions } from 'better-auth';
 
 /**
  * ObjectQL Adapter for Better-Auth
@@ -9,222 +8,135 @@ import type { ObjectQLClient } from '@objectstack/ql';
  * 
  * Pattern: All database operations use ql.entity('EntityName').operation()
  * NO direct SQL, Prisma, or Drizzle calls.
+ * 
+ * Note: The peer dependency @objectstack/ql provides the ObjectQLClient type.
+ * This file uses 'any' type to avoid type errors when the peer dependency is not installed.
  */
 
 export interface ObjectQLAdapterConfig {
-  ql: ObjectQLClient;
+  ql: any; // ObjectQLClient from @objectstack/ql peer dependency
+  debugLogs?: boolean;
 }
 
 /**
- * Generate a unique ID for entities
- * Prefers crypto.randomUUID, falls back to timestamp-based ID
+ * Creates a Better-Auth DBAdapter for ObjectQL
+ * 
+ * This follows the better-auth 1.4+ adapter pattern where adapters
+ * are factory functions that return a function that takes BetterAuthOptions
+ * and returns the actual adapter implementation.
  */
-function generateId(): string {
-  // Try crypto.randomUUID first (available in modern runtimes)
-  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
-    return crypto.randomUUID();
-  }
-  
-  // Fallback: timestamp + random number + counter for better uniqueness
-  const timestamp = Date.now().toString(36);
-  const random = Math.random().toString(36).substring(2, 15);
-  const counter = (Math.random() * 1000000).toString(36);
-  return `${timestamp}-${random}-${counter}`;
-}
+export function createObjectQLAdapter(config: ObjectQLAdapterConfig) {
+  const { ql, debugLogs = false } = config;
 
-export function createObjectQLAdapter(config: ObjectQLAdapterConfig): Adapter {
-  const { ql } = config;
+  return (_options: BetterAuthOptions) => {
+    // Model name mapping (better-auth uses lowercase model names)
+    const modelMap: Record<string, string> = {
+      user: 'User',
+      session: 'Session',
+      account: 'Account',
+      verification: 'VerificationToken',
+    };
 
-  return {
-    // User operations
-    async createUser(data: AdapterUser): Promise<AdapterUser> {
-      const user = await ql.entity('User').create({
-        data: {
-          id: data.id,
-          email: data.email,
-          emailVerified: data.emailVerified ?? false,
-          name: data.name ?? null,
-          image: data.image ?? null,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-      });
-      return user as AdapterUser;
-    },
+    const getModelName = (model: string) => modelMap[model] || model;
 
-    async getUser(id: string): Promise<AdapterUser | null> {
-      const user = await ql.entity('User').findUnique({
-        where: { id },
-      });
-      return user as AdapterUser | null;
-    },
-
-    async getUserByEmail(email: string): Promise<AdapterUser | null> {
-      const user = await ql.entity('User').findUnique({
-        where: { email },
-      });
-      return user as AdapterUser | null;
-    },
-
-    async updateUser(id: string, data: Partial<AdapterUser>): Promise<AdapterUser> {
-      const user = await ql.entity('User').update({
-        where: { id },
-        data: {
-          ...data,
-          updatedAt: new Date(),
-        },
-      });
-      return user as AdapterUser;
-    },
-
-    async deleteUser(id: string): Promise<void> {
-      await ql.entity('User').delete({
-        where: { id },
-      });
-    },
-
-    // Session operations
-    async createSession(data: AdapterSession): Promise<AdapterSession> {
-      const session = await ql.entity('Session').create({
-        data: {
-          id: data.id,
-          userId: data.userId,
-          expiresAt: data.expiresAt,
-          token: data.token,
-          ipAddress: data.ipAddress ?? null,
-          userAgent: data.userAgent ?? null,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-      });
-      return session as AdapterSession;
-    },
-
-    async getSession(token: string): Promise<AdapterSession | null> {
-      const session = await ql.entity('Session').findUnique({
-        where: { token },
-      });
-      return session as AdapterSession | null;
-    },
-
-    async updateSession(token: string, data: Partial<AdapterSession>): Promise<AdapterSession> {
-      const session = await ql.entity('Session').update({
-        where: { token },
-        data: {
-          ...data,
-          updatedAt: new Date(),
-        },
-      });
-      return session as AdapterSession;
-    },
-
-    async deleteSession(token: string): Promise<void> {
-      await ql.entity('Session').delete({
-        where: { token },
-      });
-    },
-
-    // Account operations
-    async createAccount(data: AdapterAccount): Promise<AdapterAccount> {
-      const account = await ql.entity('Account').create({
-        data: {
-          id: data.id,
-          userId: data.userId,
-          accountId: data.accountId,
-          providerId: data.providerId,
-          accessToken: data.accessToken ?? null,
-          refreshToken: data.refreshToken ?? null,
-          idToken: data.idToken ?? null,
-          expiresAt: data.expiresAt ?? null,
-          scope: data.scope ?? null,
-          password: data.password ?? null,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-      });
-      return account as AdapterAccount;
-    },
-
-    async getAccount(providerId: string, accountId: string): Promise<AdapterAccount | null> {
-      const account = await ql.entity('Account').findFirst({
-        where: {
-          providerId,
-          accountId,
-        },
-      });
-      return account as AdapterAccount | null;
-    },
-
-    async updateAccount(
-      providerId: string,
-      accountId: string,
-      data: Partial<AdapterAccount>
-    ): Promise<AdapterAccount> {
-      // Storage-agnostic approach: Find by composite fields, then update by ID
-      // This avoids Prisma-specific compound key syntax that may not work with all ObjectQL drivers
-      const existingAccount = await ql.entity('Account').findFirst({
-        where: {
-          providerId,
-          accountId,
-        },
-      });
+    return {
+      id: 'objectql-adapter',
       
-      if (!existingAccount) {
-        throw new Error(`Account not found: ${providerId}/${accountId}`);
-      }
-      
-      const account = await ql.entity('Account').update({
-        where: { id: existingAccount.id },
-        data: {
-          ...data,
-          updatedAt: new Date(),
-        },
-      });
-      return account as AdapterAccount;
-    },
+      // Create a record in the specified model
+      async create({ model, data }: { model: string; data: any }) {
+        const entityName = getModelName(model);
+        if (debugLogs) console.log(`[ObjectQL Adapter] create ${entityName}:`, data);
+        
+        const result = await ql.entity(entityName).create({ data });
+        return result;
+      },
 
-    async deleteAccount(providerId: string, accountId: string): Promise<void> {
-      // Use deleteMany with where clause for storage-agnostic deletion
-      await ql.entity('Account').deleteMany({
-        where: {
-          providerId,
-          accountId,
-        },
-      });
-    },
+      // Find a single record matching the where clause
+      async findOne({ model, where }: { model: string; where: any }) {
+        const entityName = getModelName(model);
+        if (debugLogs) console.log(`[ObjectQL Adapter] findOne ${entityName}:`, where);
+        
+        // Try to use findUnique if there's a single unique field
+        const whereKeys = Object.keys(where);
+        if (whereKeys.length === 1) {
+          const result = await ql.entity(entityName).findUnique({ where });
+          return result || null;
+        }
+        
+        // Otherwise use findFirst for composite where clauses
+        const result = await ql.entity(entityName).findFirst({ where });
+        return result || null;
+      },
 
-    // Verification token operations
-    async createVerificationToken(data: AdapterVerificationToken): Promise<AdapterVerificationToken> {
-      const token = await ql.entity('VerificationToken').create({
-        data: {
-          id: data.id || generateId(),
-          identifier: data.identifier,
-          token: data.token,
-          expiresAt: data.expiresAt,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-      });
-      return token as AdapterVerificationToken;
-    },
+      // Find multiple records matching the where clause
+      async findMany({ model, where, limit, offset, sortBy }: { 
+        model: string; 
+        where?: any; 
+        limit?: number;
+        offset?: number;
+        sortBy?: any;
+      }) {
+        const entityName = getModelName(model);
+        if (debugLogs) console.log(`[ObjectQL Adapter] findMany ${entityName}:`, { where, limit, offset, sortBy });
+        
+        const query: any = {};
+        if (where) query.where = where;
+        if (limit) query.take = limit;
+        if (offset) query.skip = offset;
+        if (sortBy) query.orderBy = sortBy;
+        
+        const results = await ql.entity(entityName).findMany(query);
+        return results || [];
+      },
 
-    async getVerificationToken(identifier: string, token: string): Promise<AdapterVerificationToken | null> {
-      const verificationToken = await ql.entity('VerificationToken').findFirst({
-        where: {
-          identifier,
-          token,
-        },
-      });
-      return verificationToken as AdapterVerificationToken | null;
-    },
+      // Update a record matching the where clause
+      async update({ model, where, update }: { model: string; where: any; update: any }) {
+        const entityName = getModelName(model);
+        if (debugLogs) console.log(`[ObjectQL Adapter] update ${entityName}:`, { where, update });
+        
+        const result = await ql.entity(entityName).update({
+          where,
+          data: update,
+        });
+        return result;
+      },
 
-    async deleteVerificationToken(identifier: string, token: string): Promise<void> {
-      await ql.entity('VerificationToken').deleteMany({
-        where: {
-          identifier,
-          token,
-        },
-      });
-    },
+      // Update multiple records matching the where clause
+      async updateMany({ model, where, update }: { model: string; where: any; update: any }) {
+        const entityName = getModelName(model);
+        if (debugLogs) console.log(`[ObjectQL Adapter] updateMany ${entityName}:`, { where, update });
+        
+        const result = await ql.entity(entityName).updateMany({
+          where,
+          data: update,
+        });
+        return result;
+      },
+
+      // Delete a record matching the where clause
+      async delete({ model, where }: { model: string; where: any }) {
+        const entityName = getModelName(model);
+        if (debugLogs) console.log(`[ObjectQL Adapter] delete ${entityName}:`, where);
+        
+        await ql.entity(entityName).delete({ where });
+      },
+
+      // Delete multiple records matching the where clause
+      async deleteMany({ model, where }: { model: string; where: any }) {
+        const entityName = getModelName(model);
+        if (debugLogs) console.log(`[ObjectQL Adapter] deleteMany ${entityName}:`, where);
+        
+        await ql.entity(entityName).deleteMany({ where });
+      },
+
+      // Count records matching the where clause
+      async count({ model, where }: { model: string; where?: any }) {
+        const entityName = getModelName(model);
+        if (debugLogs) console.log(`[ObjectQL Adapter] count ${entityName}:`, where);
+        
+        const count = await ql.entity(entityName).count({ where });
+        return count;
+      },
+    };
   };
 }
