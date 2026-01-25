@@ -15,6 +15,23 @@ export interface ObjectQLAdapterConfig {
   ql: ObjectQLClient;
 }
 
+/**
+ * Generate a unique ID for entities
+ * Prefers crypto.randomUUID, falls back to timestamp-based ID
+ */
+function generateId(): string {
+  // Try crypto.randomUUID first (available in modern runtimes)
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  
+  // Fallback: timestamp + random number + counter for better uniqueness
+  const timestamp = Date.now().toString(36);
+  const random = Math.random().toString(36).substring(2, 15);
+  const counter = (Math.random() * 1000000).toString(36);
+  return `${timestamp}-${random}-${counter}`;
+}
+
 export function createObjectQLAdapter(config: ObjectQLAdapterConfig): Adapter {
   const { ql } = config;
 
@@ -180,7 +197,7 @@ export function createObjectQLAdapter(config: ObjectQLAdapterConfig): Adapter {
     async createVerificationToken(data: AdapterVerificationToken): Promise<AdapterVerificationToken> {
       const token = await ql.entity('VerificationToken').create({
         data: {
-          id: data.id || crypto.randomUUID?.() || `${Date.now()}-${Math.random()}`,
+          id: data.id || generateId(),
           identifier: data.identifier,
           token: data.token,
           expiresAt: data.expiresAt,

@@ -62,10 +62,16 @@ export interface VerificationToken {
 }
 
 /**
+ * ObjectOS Permissions
+ * Can be an array of permission strings or a map of permissions to boolean values
+ */
+export type ObjectOSPermissions = string[] | Record<string, boolean> | null;
+
+/**
  * Extended user with ObjectOS permissions
  */
 export interface UserWithPermissions extends User {
-  permissions?: string[] | null;
+  permissions?: ObjectOSPermissions;
 }
 
 /**

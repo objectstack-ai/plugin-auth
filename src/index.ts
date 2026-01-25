@@ -122,7 +122,7 @@ export function createAuthPlugin(config: AuthPluginConfig = {}): ObjectStackPlug
 }
 
 // Re-export key types and utilities
-export type { ObjectStackAuthServerConfig } from './server/index.js';
+export type { ObjectStackAuthServerConfig, ObjectOSPermissions } from './server/index.js';
 export type { ObjectStackSession } from './server/index.js';
 export { createAuthServer, getSession } from './server/index.js';
 
@@ -159,6 +159,7 @@ export type {
   PasswordResetConfirm,
   EmailVerification,
   AuthErrorCode,
+  ObjectOSPermissions,
 } from './types.js';
 export { AuthError } from './types.js';
 

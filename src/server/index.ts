@@ -4,6 +4,12 @@ import type { ObjectQLClient } from '@objectstack/ql';
 import { createObjectQLAdapter } from '../adapter/index.js';
 
 /**
+ * ObjectOS Permissions type
+ * Can be customized based on your RBAC implementation
+ */
+export type ObjectOSPermissions = string[] | Record<string, boolean> | null;
+
+/**
  * Server-side configuration for ObjectStack Auth Plugin
  */
 export interface ObjectStackAuthServerConfig {
@@ -11,9 +17,9 @@ export interface ObjectStackAuthServerConfig {
   secret?: string;
   baseURL?: string;
   trustedOrigins?: string[];
-  emailProvider?: any; // Better-Auth email provider
-  socialProviders?: any[]; // Better-Auth social providers
-  onGetPermissions?: (userId: string) => Promise<any>;
+  emailProvider?: BetterAuthOptions['emailAndPassword'];
+  socialProviders?: BetterAuthOptions['socialProviders'];
+  onGetPermissions?: (userId: string) => Promise<ObjectOSPermissions>;
 }
 
 /**
@@ -137,7 +143,7 @@ export interface ObjectStackSession {
     name?: string;
     image?: string;
     emailVerified: boolean;
-    permissions?: any; // ObjectOS permissions
+    permissions?: ObjectOSPermissions;
   };
   session: {
     id: string;
