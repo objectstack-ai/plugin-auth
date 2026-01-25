@@ -1,0 +1,47 @@
+# Authentication Schema for ObjectStack
+# Compatible with Better-Auth expectations
+
+type User {
+  id: ID!
+  email: String!
+  emailVerified: Boolean!
+  name: String
+  image: String
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type Session {
+  id: ID!
+  userId: ID!
+  expiresAt: DateTime!
+  token: String!
+  ipAddress: String
+  userAgent: String
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type Account {
+  id: ID!
+  userId: ID!
+  accountId: String!
+  providerId: String!
+  accessToken: String
+  refreshToken: String
+  idToken: String
+  expiresAt: DateTime
+  scope: String
+  password: String
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type VerificationToken {
+  id: ID!
+  identifier: String!
+  token: String!
+  expiresAt: DateTime!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}

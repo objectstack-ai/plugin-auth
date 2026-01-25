@@ -1,0 +1,52 @@
+{
+  "name": "@objectstack/plugin-auth",
+  "version": "0.1.0",
+  "description": "Better-Auth plugin for ObjectStack authentication and identity layer",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "objectstack",
+    "better-auth",
+    "authentication",
+    "plugin"
+  ],
+  "author": "ObjectStack",
+  "license": "MIT",
+  "peerDependencies": {
+    "better-auth": "^1.0.0",
+    "react": "^18.0.0"
+  },
+  "dependencies": {
+    "@objectstack/protocol": "*",
+    "@objectstack/ql": "*"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/react": "^18.0.0",
+    "typescript": "^5.0.0"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./server": {
+      "import": "./dist/server/index.js",
+      "types": "./dist/server/index.d.ts"
+    },
+    "./client": {
+      "import": "./dist/client/hooks.js",
+      "types": "./dist/client/hooks.d.ts"
+    },
+    "./adapter": {
+      "import": "./dist/adapter/index.js",
+      "types": "./dist/adapter/index.d.ts"
+    }
+  }
+}
