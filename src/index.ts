@@ -143,5 +143,24 @@ export {
 } from './client/hooks.js';
 export type { ObjectStackClientSession } from './client/hooks.js';
 
+// Re-export all types
+export type {
+  User,
+  Session,
+  Account,
+  VerificationToken,
+  UserWithPermissions,
+  AuthSession,
+  EmailSignInCredentials,
+  EmailSignUpData,
+  SocialProvider,
+  SocialSignInOptions,
+  PasswordResetRequest,
+  PasswordResetConfirm,
+  EmailVerification,
+  AuthErrorCode,
+} from './types.js';
+export { AuthError } from './types.js';
+
 // Default export
 export default createAuthPlugin;
