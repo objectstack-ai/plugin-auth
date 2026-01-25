@@ -84,7 +84,7 @@ export function createAuthServer(config: ObjectStackAuthServerConfig) {
   }
 
   // Add social providers if configured
-  if (socialProviders && typeof socialProviders === 'object' && Object.keys(socialProviders).length > 0) {
+  if (socialProviders && Object.keys(socialProviders).length > 0) {
     authOptions.socialProviders = socialProviders as BetterAuthOptions['socialProviders'];
   }
 

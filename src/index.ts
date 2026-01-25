@@ -101,7 +101,10 @@ export function createAuthPlugin(config: AuthPluginConfig = {}): ObjectStackPlug
         // Better-Auth exposes a handler for all auth routes
         // The handler expects a Web Request object
         context.app.all('/api/auth/*', async (req: any) => {
-          return authServer!.handler(req);
+          if (!authServer) {
+            throw new Error('Auth server not initialized');
+          }
+          return authServer.handler(req);
         });
 
         console.log('[Auth Plugin] Authentication routes registered at /api/auth/*');

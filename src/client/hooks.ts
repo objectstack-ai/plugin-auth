@@ -85,8 +85,13 @@ export type ObjectStackClientSession = {
 export function usePermissions() {
   const { data: session, isPending } = useSession();
   
+  // Safely extract permissions, defaulting to undefined if not present
+  const permissions = session?.user && 'permissions' in session.user 
+    ? (session.user as any).permissions 
+    : undefined;
+  
   return {
-    permissions: (session?.user as any)?.permissions as string[] | Record<string, boolean> | null | undefined,
+    permissions,
     isPending,
     isAuthenticated: !!session,
   };

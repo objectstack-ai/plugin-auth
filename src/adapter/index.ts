@@ -28,7 +28,7 @@ export interface ObjectQLAdapterConfig {
 export function createObjectQLAdapter(config: ObjectQLAdapterConfig) {
   const { ql, debugLogs = false } = config;
 
-  return (options: BetterAuthOptions) => {
+  return (_options: BetterAuthOptions) => {
     // Model name mapping (better-auth uses lowercase model names)
     const modelMap: Record<string, string> = {
       user: 'User',
