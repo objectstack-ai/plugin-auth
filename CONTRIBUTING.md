@@ -131,6 +131,42 @@ When adding tests (future work):
    git push origin feature/your-feature-name
    ```
 
+## Automated Workflows
+
+This repository includes several GitHub Actions workflows to ensure code quality:
+
+### CI Workflow
+- **Trigger**: Pull requests and pushes to `main` or `develop` branches
+- **Actions**: 
+  - Type checking with TypeScript
+  - Building the project
+  - Runs on Node.js 18.x and 20.x
+- **Location**: `.github/workflows/ci.yml`
+
+### Code Quality Workflow
+- **Trigger**: Pull requests to `main` or `develop` branches
+- **Actions**:
+  - Dependency review (fails on moderate+ severity issues)
+  - CodeQL security analysis for TypeScript/JavaScript
+- **Location**: `.github/workflows/code-quality.yml`
+
+### Release Workflow
+- **Trigger**: Version tags (v*) or manual dispatch
+- **Actions**:
+  - Type checking and building
+  - Creating GitHub releases with auto-generated release notes
+  - npm publishing (commented out, ready to enable)
+- **Location**: `.github/workflows/release.yml`
+
+### Dependabot
+- **Schedule**: Weekly (Mondays)
+- **Updates**:
+  - npm dependencies
+  - GitHub Actions versions
+- **Configuration**: `.github/dependabot.yml`
+
+All PRs will automatically run CI and code quality checks. Make sure your changes pass all checks before requesting review.
+
 ## Common Tasks
 
 ### Adding a New Auth Provider
