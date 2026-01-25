@@ -77,12 +77,29 @@ export function usePermissions() {
 
 /**
  * Convenience hook to check if user has a specific permission
+ * Supports both array and object-based permission formats
  */
 export function useHasPermission(permission: string) {
   const { permissions, isPending } = usePermissions();
   
+  const hasPermission = (() => {
+    if (!permissions) return false;
+    
+    // Array format: ['user.read', 'user.write']
+    if (Array.isArray(permissions)) {
+      return permissions.includes(permission);
+    }
+    
+    // Object format: { 'user.read': true, 'user.write': false }
+    if (typeof permissions === 'object') {
+      return permissions[permission] === true;
+    }
+    
+    return false;
+  })();
+  
   return {
-    hasPermission: permissions?.includes?.(permission) ?? false,
+    hasPermission,
     isPending,
   };
 }
