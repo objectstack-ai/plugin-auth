@@ -143,13 +143,21 @@ export function createObjectQLAdapter(config: ObjectQLAdapterConfig): Adapter {
       accountId: string,
       data: Partial<AdapterAccount>
     ): Promise<AdapterAccount> {
-      const account = await ql.entity('Account').update({
+      // Storage-agnostic approach: Find by composite fields, then update by ID
+      // This avoids Prisma-specific compound key syntax that may not work with all ObjectQL drivers
+      const existingAccount = await ql.entity('Account').findFirst({
         where: {
-          providerId_accountId: {
-            providerId,
-            accountId,
-          },
+          providerId,
+          accountId,
         },
+      });
+      
+      if (!existingAccount) {
+        throw new Error(`Account not found: ${providerId}/${accountId}`);
+      }
+      
+      const account = await ql.entity('Account').update({
+        where: { id: existingAccount.id },
         data: {
           ...data,
           updatedAt: new Date(),
@@ -159,12 +167,11 @@ export function createObjectQLAdapter(config: ObjectQLAdapterConfig): Adapter {
     },
 
     async deleteAccount(providerId: string, accountId: string): Promise<void> {
-      await ql.entity('Account').delete({
+      // Use deleteMany with where clause for storage-agnostic deletion
+      await ql.entity('Account').deleteMany({
         where: {
-          providerId_accountId: {
-            providerId,
-            accountId,
-          },
+          providerId,
+          accountId,
         },
       });
     },

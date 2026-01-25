@@ -86,32 +86,45 @@ export function createAuthServer(config: ObjectStackAuthServerConfig) {
   // Create Better-Auth instance
   const auth = betterAuth(authOptions);
 
-  // RBAC Integration: Inject permissions into session
-  // This is a custom plugin hook that runs after session retrieval
-  if (onGetPermissions) {
-    const originalGetSession = auth.api.getSession.bind(auth.api);
-    auth.api.getSession = async (request: any) => {
-      const session = await originalGetSession(request);
+  // RBAC Integration: Enhanced session retrieval with permissions
+  // Note: This wraps the session retrieval to inject permissions
+  // If Better-Auth provides official plugin hooks in the future, migrate to those
+  return {
+    ...auth,
+    
+    // Enhanced getSession that includes permissions
+    getSessionWithPermissions: async (request: Request) => {
+      const session = await auth.api.getSession({ request });
       
-      if (session?.user?.id) {
+      if (session?.user?.id && onGetPermissions) {
         try {
           // Query ObjectOS for user permissions
           const permissions = await onGetPermissions(session.user.id);
           
-          // Inject permissions into session object
-          session.user.permissions = permissions;
+          // Return enhanced session with permissions
+          return {
+            ...session,
+            user: {
+              ...session.user,
+              permissions,
+            },
+          };
         } catch (error) {
           console.error('Failed to load user permissions:', error);
-          // Don't fail the session if permissions fail to load
-          session.user.permissions = null;
+          // Return session without permissions on error
+          return {
+            ...session,
+            user: {
+              ...session.user,
+              permissions: null,
+            },
+          };
         }
       }
       
       return session;
-    };
-  }
-
-  return auth;
+    },
+  };
 }
 
 /**
@@ -136,8 +149,17 @@ export interface ObjectStackSession {
 }
 
 /**
- * Utility to extract session from request
+ * Utility to extract session with permissions from request
  */
-export async function getSession(auth: ReturnType<typeof createAuthServer>, request: Request): Promise<ObjectStackSession | null> {
+export async function getSession(
+  auth: ReturnType<typeof createAuthServer>, 
+  request: Request
+): Promise<ObjectStackSession | null> {
+  // Use the enhanced getSessionWithPermissions if available
+  if ('getSessionWithPermissions' in auth && typeof auth.getSessionWithPermissions === 'function') {
+    return await auth.getSessionWithPermissions(request) as ObjectStackSession | null;
+  }
+  
+  // Fallback to standard getSession
   return await auth.api.getSession({ request }) as ObjectStackSession | null;
 }
