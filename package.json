@@ -26,9 +26,9 @@
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
-    "@types/react": "^18.0.0",
+    "@types/react": "^19.2.14",
     "better-auth": "^1.4.17",
-    "react": "^19.2.3",
+    "react": "^19.2.5",
     "typescript": "^5.0.0"
   },
   "exports": {
